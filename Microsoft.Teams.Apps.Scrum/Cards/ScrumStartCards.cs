@@ -102,7 +102,7 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
                         {
                             Size = AdaptiveTextSize.Medium,
                             Wrap = true,
-                            Text = cardMessage + " Debug ",
+                            Text = cardMessage + " Debug 2",
                         },
                     },
             };
