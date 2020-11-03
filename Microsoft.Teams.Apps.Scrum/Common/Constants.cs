@@ -15,6 +15,11 @@ namespace Microsoft.Teams.Apps.Scrum
         public const string Start = "start scrum";
 
         /// <summary>
+        /// text that triggers report action.
+        /// </summary>
+        public const string Report = "report";
+
+        /// <summary>
         ///  text that triggers complete scrum action.
         /// </summary>
         public const string CompleteScrum = "end scrum";

@@ -114,6 +114,12 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
 
                         switch (turnContext.Activity.Text.Trim().ToLower())
                         {
+                            case Constants.Report:
+                                this.telemetryClient.TrackTrace($"scrum {conversationId} requesting report by {turnContext.Activity.From.Id}");
+                                var reportActivity = MessageFactory.Attachment(ScrumCards.ScrumReportCard());
+                                reportActivity.Conversation = turnContext.Activity.Conversation;
+                                await turnContext.SendActivityAsync(reportActivity, cancellationToken);
+                                break;
                             case Constants.Start:
                                 this.telemetryClient.TrackTrace($"scrum {conversationId} started by {turnContext.Activity.From.Id}");
 
