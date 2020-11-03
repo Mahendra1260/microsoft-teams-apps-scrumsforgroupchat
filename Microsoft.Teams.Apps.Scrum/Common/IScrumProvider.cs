@@ -25,5 +25,7 @@ namespace Microsoft.Teams.Apps.Scrum.Common
         /// <param name="conversationId">scrum id received from bot based on which appropriate row data will be fetched.</param>
         /// <returns><see cref="Task"/> Already saved entity detail.</returns>
         Task<ScrumEntity> GetScrumAsync(string conversationId);
+
+        Task<bool> SaveOrUpdateScrumUpdatesAsync(ScrumDetailsEntity scrumUpdate);
     }
 }

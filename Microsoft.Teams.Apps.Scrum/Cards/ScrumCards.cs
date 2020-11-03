@@ -155,7 +155,7 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
         /// <param name="scrumDetails">scrum details.</param>
         /// <param name="appBaseUrl">app base url.</param>
         /// <returns>card.</returns>
-        public static Attachment GetUpdateCard(string name, ScrumDetails scrumDetails, string appBaseUrl)
+        public static Attachment GetUpdateCard(string name, ScrumDetailsEntity scrumDetails, string appBaseUrl)
         {
             Uri blockerImgUrl = new Uri(appBaseUrl + "/content/blocked.png");
             string updatedTimeStamp = DateTime.UtcNow.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'");
@@ -274,7 +274,7 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
         /// </summary>
         /// <param name="scrumDetails">ScrumDetails object.</param>
         /// <returns>return carad.</returns>
-        public static Attachment ValidationCard(ScrumDetails scrumDetails)
+        public static Attachment ValidationCard(ScrumDetailsEntity scrumDetails)
         {
             string yesterdayValidationText = string.IsNullOrEmpty(scrumDetails.Yesterday) ? Resources.YesterdayValidationText : string.Empty;
             string todayValidationText = string.IsNullOrEmpty(scrumDetails.Today) ? Resources.TodayValidationText : string.Empty;

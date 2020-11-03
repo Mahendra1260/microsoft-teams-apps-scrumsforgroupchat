@@ -19,6 +19,7 @@ namespace Microsoft.Teams.Apps.AskHR.Common.Providers
     public class ScrumProvider : IScrumProvider
     {
         private const string PartitionKey = "ScrumInfo";
+        private const string UpdatesPartitionKey = "ScrumUpdates";
 
         private readonly Lazy<Task> initializeTask;
         private CloudTable scrumCloudTable;
@@ -56,6 +57,24 @@ namespace Microsoft.Teams.Apps.AskHR.Common.Providers
             }
         }
 
+        public async Task<bool> SaveOrUpdateScrumUpdatesAsync(ScrumDetailsEntity scrumDetail)
+        {
+            try
+            {
+                scrumDetail.PartitionKey = UpdatesPartitionKey;
+                scrumDetail.RowKey = scrumDetail.UniqueRowKey;
+                var result = await this.StoreOrUpdateScrumEntityAsync(scrumDetail);
+                return result.HttpStatusCode == (int)HttpStatusCode.NoContent;
+            }
+            catch (Exception ex)
+            {
+                this.telemetryClient.TrackException(ex);
+                this.telemetryClient.TrackTrace($"Exception : {ex.Message}");
+                return false;
+            }
+        }
+
+
         /// <inheritdoc/>
         public async Task<ScrumEntity> GetScrumAsync(string conversationId)
         {
@@ -81,7 +100,7 @@ namespace Microsoft.Teams.Apps.AskHR.Common.Providers
         /// </summary>
         /// <param name="entity">entity.</param>
         /// <returns><see cref="Task"/> that represents configuration entity is saved or updated.</returns>
-        private async Task<TableResult> StoreOrUpdateScrumEntityAsync(ScrumEntity entity)
+        private async Task<TableResult> StoreOrUpdateScrumEntityAsync(TableEntity entity)
         {
             await this.EnsureInitializedAsync();
             TableOperation addOrUpdateOperation = TableOperation.InsertOrReplace(entity);

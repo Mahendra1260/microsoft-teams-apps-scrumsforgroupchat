@@ -229,7 +229,7 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
                     throw new ArgumentException("activity's value should not be null");
                 }
 
-                ScrumDetails scrumMemberDetails = JsonConvert.DeserializeObject<ScrumDetails>(JObject.Parse(activityFetch.Value.ToString())["data"].ToString());
+                ScrumDetailsEntity scrumMemberDetails = JsonConvert.DeserializeObject<ScrumDetailsEntity>(JObject.Parse(activityFetch.Value.ToString())["data"].ToString());
                 string membersId = scrumMemberDetails.MembersActivityIdMap;
                 string activityIdval = this.GetActivityIdToMatch(membersId, turnContext.Activity.From.Id);
 
@@ -292,7 +292,11 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
                     throw new ArgumentException("activity's value should not be null");
                 }
 
-                ScrumDetails scrumDetails = JsonConvert.DeserializeObject<ScrumDetails>(JObject.Parse(activity.Value.ToString())["data"].ToString());
+                ScrumDetailsEntity scrumDetails = JsonConvert.DeserializeObject<ScrumDetailsEntity>(JObject.Parse(activity.Value.ToString())["data"].ToString());
+                scrumDetails.Name = turnContext.Activity.From.Name;
+                scrumDetails.UpdateTime = new DateTimeOffset(DateTime.UtcNow);
+                scrumDetails.ThreadConversationId = turnContext.Activity.Conversation.Id;
+                scrumDetails.UniqueRowKey = Guid.NewGuid().ToString();
                 if (string.IsNullOrEmpty(scrumDetails.Yesterday) || string.IsNullOrEmpty(scrumDetails.Today))
                 {
                     return this.GetScrumValidation(scrumDetails, turnContext, cancellationToken);
@@ -307,6 +311,13 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
                     return default;
                 }
 
+                var savedData = await this.scrumProvider.SaveOrUpdateScrumUpdatesAsync(scrumDetails);
+
+                if (!savedData)
+                {
+                    await turnContext.SendActivityAsync(Resources.ErrorMessage);
+                    return null;
+                }
                 activity.Id = activityId;
                 activity.Conversation = turnContext.Activity.Conversation;
 
@@ -510,7 +521,7 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
         /// <param name="turnContext">Turn context.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>TaskModuleResponse.</returns>
-        private TaskModuleResponse GetScrumValidation(ScrumDetails scrum, ITurnContext<IInvokeActivity> turnContext, CancellationToken cancellationToken)
+        private TaskModuleResponse GetScrumValidation(ScrumDetailsEntity scrum, ITurnContext<IInvokeActivity> turnContext, CancellationToken cancellationToken)
         {
             return new TaskModuleResponse
             {
