@@ -23,6 +23,7 @@ namespace Microsoft.Teams.Apps.AskHR.Common.Providers
 
         private readonly Lazy<Task> initializeTask;
         private CloudTable scrumCloudTable;
+        private CloudTable scrumUpdateTable;
 
         private TelemetryClient telemetryClient;
 
@@ -46,7 +47,7 @@ namespace Microsoft.Teams.Apps.AskHR.Common.Providers
             {
                 scrum.PartitionKey = PartitionKey;
                 scrum.RowKey = scrum.ThreadConversationId;
-                var result = await this.StoreOrUpdateScrumEntityAsync(scrum);
+                var result = await this.StoreOrUpdateScrumEntityAsync(scrum, this.scrumCloudTable);
                 return result.HttpStatusCode == (int)HttpStatusCode.NoContent;
             }
             catch (Exception ex)
@@ -63,7 +64,7 @@ namespace Microsoft.Teams.Apps.AskHR.Common.Providers
             {
                 scrumDetail.PartitionKey = UpdatesPartitionKey;
                 scrumDetail.RowKey = scrumDetail.UniqueRowKey;
-                var result = await this.StoreOrUpdateScrumEntityAsync(scrumDetail);
+                var result = await this.StoreOrUpdateScrumEntityAsync(scrumDetail, this.scrumUpdateTable);
                 return result.HttpStatusCode == (int)HttpStatusCode.NoContent;
             }
             catch (Exception ex)
@@ -100,11 +101,11 @@ namespace Microsoft.Teams.Apps.AskHR.Common.Providers
         /// </summary>
         /// <param name="entity">entity.</param>
         /// <returns><see cref="Task"/> that represents configuration entity is saved or updated.</returns>
-        private async Task<TableResult> StoreOrUpdateScrumEntityAsync(TableEntity entity)
+        private async Task<TableResult> StoreOrUpdateScrumEntityAsync(TableEntity entity, CloudTable table)
         {
             await this.EnsureInitializedAsync();
             TableOperation addOrUpdateOperation = TableOperation.InsertOrReplace(entity);
-            return await this.scrumCloudTable.ExecuteAsync(addOrUpdateOperation);
+            return await table.ExecuteAsync(addOrUpdateOperation);
         }
 
         /// <summary>
@@ -119,8 +120,9 @@ namespace Microsoft.Teams.Apps.AskHR.Common.Providers
                 CloudStorageAccount storageAccount = CloudStorageAccount.Parse(connectionString);
                 CloudTableClient cloudTableClient = storageAccount.CreateCloudTableClient();
                 this.scrumCloudTable = cloudTableClient.GetTableReference("Scrum");
-
+                this.scrumUpdateTable = cloudTableClient.GetTableReference("ScrumUpdates");
                 await this.scrumCloudTable.CreateIfNotExistsAsync();
+                await this.scrumUpdateTable.CreateIfNotExistsAsync();
             }
             catch (Exception ex)
             {
