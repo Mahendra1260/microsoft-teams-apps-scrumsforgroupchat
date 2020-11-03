@@ -5,7 +5,10 @@
 namespace Microsoft.Teams.Apps.AskHR.Common.Providers
 {
     using System;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.Net;
+    using System.Security.Cryptography;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
     using Microsoft.Teams.Apps.Scrum.Common;
@@ -74,7 +77,33 @@ namespace Microsoft.Teams.Apps.AskHR.Common.Providers
                 return false;
             }
         }
+   
+        public async Task<Dictionary<string, List<ScrumDetailsEntity>>> GetScrumUpdates(string conversationId, DateTimeOffset startTime, DateTimeOffset endTime)
+        {
+            TableQuery<ScrumDetailsEntity> scrumDetailsQuery = new TableQuery<ScrumDetailsEntity>().
+                     Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, UpdatesPartitionKey))
+                     .Where(TableQuery.GenerateFilterCondition("ThreadConversationId", QueryComparisons.Equal, conversationId))
+                     .Where(TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.GreaterThanOrEqual, startTime))
+                     .Where(TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.GreaterThanOrEqual, endTime));
+            TableContinuationToken token = null;
+            var updatesDictionary = new Dictionary<string, List<ScrumDetailsEntity>>();
+            do
+            {
+                TableQuerySegment<ScrumDetailsEntity> resultSegment = await this.scrumUpdateTable.ExecuteQuerySegmentedAsync(scrumDetailsQuery, token);
+                token = resultSegment.ContinuationToken;
 
+                foreach (var scrumUpdate in resultSegment.Results)
+                {
+                    if (!updatesDictionary.ContainsKey(scrumUpdate.Name))
+                    {
+                        updatesDictionary[scrumUpdate.Name] = new List<ScrumDetailsEntity>();
+                    }
+
+                    updatesDictionary[scrumUpdate.Name].Add(scrumUpdate);
+                }
+            } while (token != null);
+            return updatesDictionary;
+        }
 
         /// <inheritdoc/>
         public async Task<ScrumEntity> GetScrumAsync(string conversationId)
