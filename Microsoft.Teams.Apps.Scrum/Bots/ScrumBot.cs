@@ -96,7 +96,21 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
             }
         }
 
-        /// <inheritdoc/>
+        private async Task HandleReportGeneration(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken) {
+            string conversationId = turnContext.Activity.Conversation.Id;
+            var activityFetch = (Activity)turnContext.Activity;
+            if (activityFetch.Value == null)
+            {
+                throw new ArgumentException("activity's value should not be null");
+            }
+
+            var startDate = JObject.Parse(activityFetch.Value.ToString())["start_date"].ToString();
+            var endDate = JObject.Parse(activityFetch.Value.ToString())["end_date"].ToString();
+            //ScrumDetailsEntity scrumMemberDetails = JsonConvert.DeserializeObject<ScrumDetailsEntity>(JObject.Parse(activityFetch.Value.ToString())["data"].ToString());
+            this.telemetryClient.TrackTrace($"scrum {conversationId} requesting report by {turnContext.Activity.From.Id} , for date {startDate}");
+            await turnContext.SendActivityAsync(startDate, cancellationToken: cancellationToken);
+        }
+
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
             try
@@ -111,22 +125,13 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
                     if (turnContext.Activity.Type.Equals(ActivityTypes.Message))
                     {
                         turnContext.Activity.RemoveRecipientMention();
+                        if (turnContext.Activity.Text == null) {
+                            await this.HandleReportGeneration(turnContext, cancellationToken);
+                            return;
+                        }
 
                         switch (turnContext.Activity.Text.Trim().ToLower())
-                        {
-                            case Constants.GetReport:
-                                var activityFetch = (Activity)turnContext.Activity;
-                                if (activityFetch.Value == null)
-                                {
-                                    throw new ArgumentException("activity's value should not be null");
-                                }
-
-                                var startDate = JObject.Parse(activityFetch.Value.ToString())["start_date"].ToString();
-                                var endDate = JObject.Parse(activityFetch.Value.ToString())["end_date"].ToString();
-                                //ScrumDetailsEntity scrumMemberDetails = JsonConvert.DeserializeObject<ScrumDetailsEntity>(JObject.Parse(activityFetch.Value.ToString())["data"].ToString());
-                                this.telemetryClient.TrackTrace($"scrum {conversationId} requesting report by {turnContext.Activity.From.Id} , for date {startDate}");
-                                await turnContext.SendActivityAsync("Success", cancellationToken: cancellationToken);
-                                break;
+                        {                                
                             case Constants.Report:
                                 this.telemetryClient.TrackTrace($"scrum {conversationId} requesting report by {turnContext.Activity.From.Id}");
                                 var reportActivity = MessageFactory.Attachment(ScrumCards.ScrumReportCard());
