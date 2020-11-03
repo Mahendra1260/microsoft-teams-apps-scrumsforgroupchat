@@ -114,10 +114,24 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
 
                         switch (turnContext.Activity.Text.Trim().ToLower())
                         {
+                            case Constants.GetReport:
+                                var activityFetch = (Activity)turnContext.Activity;
+                                if (activityFetch.Value == null)
+                                {
+                                    throw new ArgumentException("activity's value should not be null");
+                                }
+
+                                var startDate = JObject.Parse(activityFetch.Value.ToString())["start_date"].ToString();
+                                var endDate = JObject.Parse(activityFetch.Value.ToString())["end_date"].ToString();
+                                //ScrumDetailsEntity scrumMemberDetails = JsonConvert.DeserializeObject<ScrumDetailsEntity>(JObject.Parse(activityFetch.Value.ToString())["data"].ToString());
+                                this.telemetryClient.TrackTrace($"scrum {conversationId} requesting report by {turnContext.Activity.From.Id} , for date {startDate}");
+                                await turnContext.SendActivityAsync("Success", cancellationToken: cancellationToken);
+                                break;
                             case Constants.Report:
                                 this.telemetryClient.TrackTrace($"scrum {conversationId} requesting report by {turnContext.Activity.From.Id}");
                                 var reportActivity = MessageFactory.Attachment(ScrumCards.ScrumReportCard());
                                 reportActivity.Conversation = turnContext.Activity.Conversation;
+                                reportActivity.Text = "get report";
                                 await turnContext.SendActivityAsync(reportActivity, cancellationToken);
                                 break;
                             case Constants.Start:

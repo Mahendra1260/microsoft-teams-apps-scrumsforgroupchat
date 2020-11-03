@@ -83,6 +83,7 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
                         MsTeams = new CardAction
                         {
                             Type = "task/submit",
+                            Text = Constants.GetReport,
                         },
                     },
                 });
