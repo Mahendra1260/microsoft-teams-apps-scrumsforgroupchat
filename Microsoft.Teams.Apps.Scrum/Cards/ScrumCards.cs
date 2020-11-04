@@ -16,7 +16,7 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
     /// </summary>
     public class ScrumCards
     {
-
+        [Obsolete]
         public static Attachment ScrumReportCard()
         {
             AdaptiveCard card = new AdaptiveCard("1.0")
@@ -87,6 +87,7 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
                         },
                     },
                 });
+            card.Title = "Report";
             var adaptiveCardAttachment = new Attachment()
             {
                 ContentType = AdaptiveCard.ContentType,
@@ -175,17 +176,6 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
                             Id = "blockers",
                             MaxLength = 1000,
                         },
-                    new AdaptiveTextBlock
-                        {
-                            Size = AdaptiveTextSize.Medium,
-                            Wrap = true,
-                            Text = "Date sample",
-                        },
-                    new AdaptiveDateInput
-                    {
-                        Id = "date",
-                        Placeholder = "Enter start Date",
-                    },
                 },
             };
             card.Actions.Add(

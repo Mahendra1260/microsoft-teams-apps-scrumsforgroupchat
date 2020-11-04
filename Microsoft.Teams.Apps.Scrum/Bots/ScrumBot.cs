@@ -7,7 +7,9 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
     using System;
     using System.Collections.Generic;
     using System.Globalization;
+    using System.IO;
     using System.Linq;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
@@ -20,6 +22,7 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
     using Microsoft.Rest;
     using Microsoft.Teams.Apps.Scrum.Cards;
     using Microsoft.Teams.Apps.Scrum.Common;
+    using Microsoft.Teams.Apps.Scrum.Common.storage;
     using Microsoft.Teams.Apps.Scrum.Models;
     using Microsoft.Teams.Apps.Scrum.Properties;
     using Newtonsoft.Json;
@@ -40,6 +43,7 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
         private readonly IConfiguration configuration;
         private readonly IScrumProvider scrumProvider;
         private readonly TelemetryClient telemetryClient;
+        private readonly IReportProvider reportProvider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ScrumBot"/> class.
@@ -48,12 +52,13 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
         /// <param name="configuration">Configuration.</param>
         /// <param name="scrumProvider">scrumProvider.</param>
         /// <param name="telemetryClient">Telemetry.</param>
-        public ScrumBot(IConfiguration configuration, IScrumProvider scrumProvider, TelemetryClient telemetryClient)
+        public ScrumBot(IConfiguration configuration, IScrumProvider scrumProvider, TelemetryClient telemetryClient, IReportProvider reportProvider)
         {
             this.scrumProvider = scrumProvider;
             this.telemetryClient = telemetryClient;
             this.configuration = configuration;
             this.expectedTenantId = configuration["TenantId"];
+            this.reportProvider = reportProvider;
         }
 
         /// <inheritdoc/>
@@ -116,17 +121,43 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
                 "yyyy-MM-dd",
                 CultureInfo.InvariantCulture));
             endDateTime.AddDays(1);
-            Dictionary<string, List<ScrumDetailsEntity>> updateMap = await this.scrumProvider.GetScrumUpdatesAsync(conversationId, startDateTime, endDateTime);
-            foreach (KeyValuePair<string, List<ScrumDetailsEntity>> update in updateMap)
-            {
-                foreach (ScrumDetailsEntity updateEntry in update.Value) {
-                    await turnContext.SendActivityAsync(update.Key + " " + updateEntry.Today, cancellationToken: cancellationToken);
-                }
-            }
+            Directory.GetCurrentDirectory();
+            List<ScrumDetailsEntity> entities = await this.scrumProvider.GetOrderedScrumUpdatesAsync(conversationId, startDateTime, endDateTime);
+            //var reportFile = await this.GetCSVReportFileFromEntities(entities);
+            /*var reply = MessageFactory.Text("This is an inline attachment.");
+            var attachment = await GetInlineAttachment(entities);
+            reply.Attachments = new List<Attachment>() { attachment };
             this.telemetryClient.TrackTrace($"scrum {conversationId} requesting report by {turnContext.Activity.From.Id} , for date {startDate}");
-            await turnContext.SendActivityAsync(startDate, cancellationToken: cancellationToken);
+            */
+            var signedReportUri = await this.reportProvider.SaveReportAndGetUri(entities, conversationId, startDateTime, endDateTime);
+            await turnContext.SendActivityAsync(signedReportUri, cancellationToken: cancellationToken);
         }
 
+        private static async Task<Attachment> GetInlineAttachment(List<ScrumDetailsEntity> entities)
+        {
+            var csv = new StringBuilder();
+            csv.AppendLine("Date,Name,Yesterday,Today,Blockers");
+            foreach (ScrumDetailsEntity entity in entities)
+            {
+                csv.AppendLine(entity.Timestamp.ToString() + "," + entity.Name + "," +
+                    entity.Yesterday + "," + entity.Today + "," + entity.Blockers);
+            }
+            var imagePath = Path.Combine(Environment.CurrentDirectory, @"Resources", "architecture-resize.png");
+            var imageData = Convert.ToBase64String(File.ReadAllBytes(imagePath));
+
+            return new Attachment
+            {
+                Name = @"Resources\architecture-resize.png",
+                ContentType = "text/csv",
+                ContentUrl = $"data:text/csv;base64,{csv}",
+            };
+        }
+
+        /* private async Task<File> GetCSVReportFileFromEntities(List<ScrumDetailsEntity> entities)
+         {
+             return null;
+         }
+        */
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
             try

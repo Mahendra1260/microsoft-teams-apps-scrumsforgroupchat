@@ -77,8 +77,8 @@ namespace Microsoft.Teams.Apps.AskHR.Common.Providers
                 return false;
             }
         }
-   
-        public async Task<Dictionary<string, List<ScrumDetailsEntity>>> GetScrumUpdatesAsync(string conversationId, DateTimeOffset startTime, DateTimeOffset endTime)
+
+        public async Task<List<ScrumDetailsEntity>> GetOrderedScrumUpdatesAsync(string conversationId, DateTimeOffset startTime, DateTimeOffset endTime)
         {
             try
             {
@@ -86,7 +86,42 @@ namespace Microsoft.Teams.Apps.AskHR.Common.Providers
                      .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, UpdatesPartitionKey))
                      .Where(TableQuery.GenerateFilterCondition("ThreadConversationId", QueryComparisons.Equal, conversationId))
                      .Where(TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.GreaterThanOrEqual, startTime))
-                     .Where(TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.LessThanOrEqual, endTime));
+                     .Where(TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.LessThanOrEqual, endTime))
+                     ;
+                TableContinuationToken token = null;
+                List<ScrumDetailsEntity> entities = new List<ScrumDetailsEntity>();
+                do
+                {
+                    TableQuerySegment<ScrumDetailsEntity> resultSegment = await this.scrumUpdateTable.ExecuteQuerySegmentedAsync(scrumDetailsQuery, token);
+                    token = resultSegment.ContinuationToken;
+
+                    foreach (var scrumUpdate in resultSegment.Results)
+                    {
+                        entities.Add(scrumUpdate);
+                    }
+                } while (token != null);
+                entities.Sort((entity1, entity2) => entity2.Timestamp.CompareTo(entity1.Timestamp));
+                return entities;
+            }
+            catch (Exception ex)
+            {
+                var stacktrace = ex.StackTrace;
+                var exMessage = ex.Message;
+                throw ex;
+            }
+        }
+
+        public async Task<Dictionary<string, List<ScrumDetailsEntity>>> GetScrumUpdatesAsync(string conversationId, DateTimeOffset startTime, DateTimeOffset endTime)
+        {
+            try
+            {
+                await this.EnsureInitializedAsync();
+                TableQuery<ScrumDetailsEntity> scrumDetailsQuery = new TableQuery<ScrumDetailsEntity>()
+                     .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, UpdatesPartitionKey))
+                     .Where(TableQuery.GenerateFilterCondition("ThreadConversationId", QueryComparisons.Equal, conversationId))
+                     .Where(TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.GreaterThanOrEqual, startTime))
+                     .Where(TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.LessThanOrEqual, endTime))
+                     ;
                 TableContinuationToken token = null;
                 var updatesDictionary = new Dictionary<string, List<ScrumDetailsEntity>>();
                 do
@@ -109,7 +144,6 @@ namespace Microsoft.Teams.Apps.AskHR.Common.Providers
             catch (Exception ex) {
                 var stacktrace = ex.StackTrace;
                 var exMessage = ex.Message;
-                Console.WriteLine(stacktrace + " " + exMessage);
                 throw ex;
             }
         }

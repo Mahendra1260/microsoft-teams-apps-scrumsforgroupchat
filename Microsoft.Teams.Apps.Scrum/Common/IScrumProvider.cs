@@ -32,5 +32,7 @@ namespace Microsoft.Teams.Apps.Scrum.Common
 
         Task<Dictionary<string, List<ScrumDetailsEntity>>> GetScrumUpdatesAsync(string conversationId, DateTimeOffset startTime, DateTimeOffset endTime);
 
+        Task<List<ScrumDetailsEntity>> GetOrderedScrumUpdatesAsync(string conversationId, DateTimeOffset startTime, DateTimeOffset endTime);
+
     }
 }

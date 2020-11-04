@@ -18,6 +18,8 @@ namespace Microsoft.Teams.Apps.Scrum
     using Microsoft.Teams.Apps.AskHR.Common.Providers;
     using Microsoft.Teams.Apps.Scrum.Bots;
     using Microsoft.Teams.Apps.Scrum.Common;
+    using Microsoft.Teams.Apps.Scrum.Common.storage;
+    using Microsoft.Teams.Apps.Scrum.storage;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Startup"/> class.
@@ -58,6 +60,8 @@ namespace Microsoft.Teams.Apps.Scrum
             services.AddSingleton<ICredentialProvider, ConfigurationCredentialProvider>();
 
             services.AddSingleton<IScrumProvider>(new ScrumProvider(this.Configuration["StorageConnectionString"]));
+
+            services.AddSingleton<IReportProvider>(new BlobService(this.Configuration["StorageConnectionString"]));
 
             services.AddSingleton<IChannelProvider, ConfigurationChannelProvider>();
 
