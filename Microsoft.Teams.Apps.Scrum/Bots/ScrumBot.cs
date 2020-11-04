@@ -115,6 +115,7 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
                 endDate,
                 "yyyy-MM-dd",
                 CultureInfo.InvariantCulture));
+            endDateTime.AddDays(1);
             Dictionary<string, List<ScrumDetailsEntity>> updateMap = await this.scrumProvider.GetScrumUpdatesAsync(conversationId, startDateTime, endDateTime);
             foreach (KeyValuePair<string, List<ScrumDetailsEntity>> update in updateMap)
             {
