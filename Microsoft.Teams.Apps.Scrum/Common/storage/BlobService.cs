@@ -58,7 +58,7 @@ namespace Microsoft.Teams.Apps.Scrum.storage
                     csv.AppendLine(entity.Timestamp.ToString() + "," + entity.Name + "," +
                         entity.Yesterday + "," + entity.Today + "," + entity.Blockers);
                 }
-                var blobName = string.Format("/{0}/{1}/{2}/report.csv", conversationId, startTime.Date.ToString(), endTime.Date.ToString());
+                var blobName = string.Format("{0}/{1}report.csv", conversationId, uuid);
                 await File.WriteAllTextAsync(tmpPath, csv.ToString());
                 var blobClient = this.reportContainerClient.GetBlobClient(blobName);
                 using FileStream uploadFileStream = File.OpenRead(tmpPath);
