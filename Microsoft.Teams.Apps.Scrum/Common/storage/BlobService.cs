@@ -20,6 +20,8 @@ namespace Microsoft.Teams.Apps.Scrum.storage
         private TelemetryClient telemetryClient;
         private BlobContainerClient reportContainerClient;
 
+        // https://27xnwgjign2tq.blob.core.windows.net/test?sv=2019-12-12&st=2020-11-04T13%3A41%3A24Z&se=2020-11-04T14%3A41%3A24Z&sr=b&sp=r&sig=61ZOV6TVjDlfPfA9X6AcNvpgAFkvnraZNPEzu0DZv2s%3D&comp=list&restype=container
+
         public BlobService(string connectionString)
         {
             this.initializeTask = new Lazy<Task>(() => this.InitializeAsync(connectionString));
@@ -51,7 +53,7 @@ namespace Microsoft.Teams.Apps.Scrum.storage
             }
             var imagePath = Path.Combine(Environment.CurrentDirectory, "architecture-resize.png");
             
-            return this.GetBlobSasUri(this.reportContainerClient, "", null);
+            return this.GetBlobSasUri(this.reportContainerClient, "sample_test.txt", null);
         }
 
         private string GetBlobSasUri(BlobContainerClient container, string blobName, string storedPolicyName = null)
@@ -61,8 +63,8 @@ namespace Microsoft.Teams.Apps.Scrum.storage
             BlobSasBuilder sasBuilder = new BlobSasBuilder()
             {
                 BlobContainerName = "test",
-                BlobName = "sample_test.txt",
-                Resource = "b",
+                BlobName = blobName,
+                Resource = "c",
             };
 
             if (storedPolicyName == null)
