@@ -4,6 +4,8 @@
 
 namespace Microsoft.Teams.Apps.Scrum.Common
 {
+    using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using Microsoft.Teams.Apps.Scrum.Models;
 
@@ -27,5 +29,8 @@ namespace Microsoft.Teams.Apps.Scrum.Common
         Task<ScrumEntity> GetScrumAsync(string conversationId);
 
         Task<bool> SaveOrUpdateScrumUpdatesAsync(ScrumDetailsEntity scrumUpdate);
+
+        Task<Dictionary<string, List<ScrumDetailsEntity>>> GetScrumUpdatesAsync(string conversationId, DateTimeOffset startTime, DateTimeOffset endTime);
+
     }
 }

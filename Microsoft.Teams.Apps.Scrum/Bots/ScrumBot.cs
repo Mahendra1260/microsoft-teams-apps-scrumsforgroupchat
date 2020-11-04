@@ -6,6 +6,7 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -106,7 +107,21 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
 
             var startDate = JObject.Parse(activityFetch.Value.ToString())["start_date"].ToString();
             var endDate = JObject.Parse(activityFetch.Value.ToString())["end_date"].ToString();
-            //ScrumDetailsEntity scrumMemberDetails = JsonConvert.DeserializeObject<ScrumDetailsEntity>(JObject.Parse(activityFetch.Value.ToString())["data"].ToString());
+            var startDateTime = new DateTimeOffset(DateTime.ParseExact(
+                startDate,
+                "yyyy-MM-dd",
+                CultureInfo.InvariantCulture));
+            var endDateTime = new DateTimeOffset(DateTime.ParseExact(
+                endDate,
+                "yyyy-MM-dd",
+                CultureInfo.InvariantCulture));
+            Dictionary<string, List<ScrumDetailsEntity>> updateMap = await this.scrumProvider.GetScrumUpdatesAsync(conversationId, startDateTime, endDateTime);
+            foreach (KeyValuePair<string, List<ScrumDetailsEntity>> update in updateMap)
+            {
+                foreach (ScrumDetailsEntity updateEntry in update.Value) {
+                    await turnContext.SendActivityAsync(update.Key + " " + updateEntry.Today, cancellationToken: cancellationToken);
+                }
+            }
             this.telemetryClient.TrackTrace($"scrum {conversationId} requesting report by {turnContext.Activity.From.Id} , for date {startDate}");
             await turnContext.SendActivityAsync(startDate, cancellationToken: cancellationToken);
         }

@@ -41,5 +41,6 @@ namespace Microsoft.Teams.Apps.Scrum.Models
         /// date of update time
         /// </summary>
         public new DateTimeOffset UpdateTime { get; set; }
+        
     }
 }
