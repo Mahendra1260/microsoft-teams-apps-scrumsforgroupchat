@@ -32,7 +32,7 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
                     Title = Resources.UpdateScrumTitle,
                     Data = new AdaptiveSubmitActionData
                     {
-                        MsTeams = new TaskModuleAction(Resources.UpdateScrumTitle, new ScrumDetails { MembersActivityIdMap = JsonConvert.SerializeObject(membersId, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }) }),
+                        MsTeams = new TaskModuleAction(Resources.UpdateScrumTitle, new ScrumDetailsEntity { MembersActivityIdMap = JsonConvert.SerializeObject(membersId, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }) }),
                     },
                 });
             card.Actions.Add(
@@ -102,7 +102,7 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
                         {
                             Size = AdaptiveTextSize.Medium,
                             Wrap = true,
-                            Text = cardMessage,
+                            Text = cardMessage + " Debug 2",
                         },
                     },
             };

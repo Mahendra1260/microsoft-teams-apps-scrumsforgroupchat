@@ -5,7 +5,10 @@
 namespace Microsoft.Teams.Apps.AskHR.Common.Providers
 {
     using System;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.Net;
+    using System.Security.Cryptography;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
     using Microsoft.Teams.Apps.Scrum.Common;
@@ -19,9 +22,11 @@ namespace Microsoft.Teams.Apps.AskHR.Common.Providers
     public class ScrumProvider : IScrumProvider
     {
         private const string PartitionKey = "ScrumInfo";
+        private const string UpdatesPartitionKey = "ScrumUpdates";
 
         private readonly Lazy<Task> initializeTask;
         private CloudTable scrumCloudTable;
+        private CloudTable scrumUpdateTable;
 
         private TelemetryClient telemetryClient;
 
@@ -45,7 +50,7 @@ namespace Microsoft.Teams.Apps.AskHR.Common.Providers
             {
                 scrum.PartitionKey = PartitionKey;
                 scrum.RowKey = scrum.ThreadConversationId;
-                var result = await this.StoreOrUpdateScrumEntityAsync(scrum);
+                var result = await this.StoreOrUpdateScrumEntityAsync(scrum, this.scrumCloudTable);
                 return result.HttpStatusCode == (int)HttpStatusCode.NoContent;
             }
             catch (Exception ex)
@@ -53,6 +58,93 @@ namespace Microsoft.Teams.Apps.AskHR.Common.Providers
                 this.telemetryClient.TrackException(ex);
                 this.telemetryClient.TrackTrace($"Exception : {ex.Message}");
                 return false;
+            }
+        }
+
+        public async Task<bool> SaveOrUpdateScrumUpdatesAsync(ScrumDetailsEntity scrumDetail)
+        {
+            try
+            {
+                scrumDetail.PartitionKey = UpdatesPartitionKey;
+                scrumDetail.RowKey = scrumDetail.UniqueRowKey;
+                var result = await this.StoreOrUpdateScrumEntityAsync(scrumDetail, this.scrumUpdateTable);
+                return result.HttpStatusCode == (int)HttpStatusCode.NoContent;
+            }
+            catch (Exception ex)
+            {
+                this.telemetryClient.TrackException(ex);
+                this.telemetryClient.TrackTrace($"Exception : {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<List<ScrumDetailsEntity>> GetOrderedScrumUpdatesAsync(string conversationId, DateTimeOffset startTime, DateTimeOffset endTime)
+        {
+            try
+            {
+                TableQuery<ScrumDetailsEntity> scrumDetailsQuery = new TableQuery<ScrumDetailsEntity>()
+                     .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, UpdatesPartitionKey))
+                     .Where(TableQuery.GenerateFilterCondition("ThreadConversationId", QueryComparisons.Equal, conversationId))
+                     .Where(TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.GreaterThanOrEqual, startTime))
+                     .Where(TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.LessThanOrEqual, endTime))
+                     ;
+                TableContinuationToken token = null;
+                List<ScrumDetailsEntity> entities = new List<ScrumDetailsEntity>();
+                do
+                {
+                    TableQuerySegment<ScrumDetailsEntity> resultSegment = await this.scrumUpdateTable.ExecuteQuerySegmentedAsync(scrumDetailsQuery, token);
+                    token = resultSegment.ContinuationToken;
+
+                    foreach (var scrumUpdate in resultSegment.Results)
+                    {
+                        entities.Add(scrumUpdate);
+                    }
+                } while (token != null);
+                entities.Sort((entity1, entity2) => entity2.Timestamp.CompareTo(entity1.Timestamp));
+                return entities;
+            }
+            catch (Exception ex)
+            {
+                var stacktrace = ex.StackTrace;
+                var exMessage = ex.Message;
+                throw ex;
+            }
+        }
+
+        public async Task<Dictionary<string, List<ScrumDetailsEntity>>> GetScrumUpdatesAsync(string conversationId, DateTimeOffset startTime, DateTimeOffset endTime)
+        {
+            try
+            {
+                await this.EnsureInitializedAsync();
+                TableQuery<ScrumDetailsEntity> scrumDetailsQuery = new TableQuery<ScrumDetailsEntity>()
+                     .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, UpdatesPartitionKey))
+                     .Where(TableQuery.GenerateFilterCondition("ThreadConversationId", QueryComparisons.Equal, conversationId))
+                     .Where(TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.GreaterThanOrEqual, startTime))
+                     .Where(TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.LessThanOrEqual, endTime))
+                     ;
+                TableContinuationToken token = null;
+                var updatesDictionary = new Dictionary<string, List<ScrumDetailsEntity>>();
+                do
+                {
+                    TableQuerySegment<ScrumDetailsEntity> resultSegment = await this.scrumUpdateTable.ExecuteQuerySegmentedAsync(scrumDetailsQuery, token);
+                    token = resultSegment.ContinuationToken;
+
+                    foreach (var scrumUpdate in resultSegment.Results)
+                    {
+                        if (!updatesDictionary.ContainsKey(scrumUpdate.Name))
+                        {
+                            updatesDictionary[scrumUpdate.Name] = new List<ScrumDetailsEntity>();
+                        }
+
+                        updatesDictionary[scrumUpdate.Name].Add(scrumUpdate);
+                    }
+                } while (token != null);
+                return updatesDictionary;
+            }
+            catch (Exception ex) {
+                var stacktrace = ex.StackTrace;
+                var exMessage = ex.Message;
+                throw ex;
             }
         }
 
@@ -81,11 +173,11 @@ namespace Microsoft.Teams.Apps.AskHR.Common.Providers
         /// </summary>
         /// <param name="entity">entity.</param>
         /// <returns><see cref="Task"/> that represents configuration entity is saved or updated.</returns>
-        private async Task<TableResult> StoreOrUpdateScrumEntityAsync(ScrumEntity entity)
+        private async Task<TableResult> StoreOrUpdateScrumEntityAsync(TableEntity entity, CloudTable table)
         {
             await this.EnsureInitializedAsync();
             TableOperation addOrUpdateOperation = TableOperation.InsertOrReplace(entity);
-            return await this.scrumCloudTable.ExecuteAsync(addOrUpdateOperation);
+            return await table.ExecuteAsync(addOrUpdateOperation);
         }
 
         /// <summary>
@@ -100,8 +192,9 @@ namespace Microsoft.Teams.Apps.AskHR.Common.Providers
                 CloudStorageAccount storageAccount = CloudStorageAccount.Parse(connectionString);
                 CloudTableClient cloudTableClient = storageAccount.CreateCloudTableClient();
                 this.scrumCloudTable = cloudTableClient.GetTableReference("Scrum");
-
+                this.scrumUpdateTable = cloudTableClient.GetTableReference("ScrumUpdates");
                 await this.scrumCloudTable.CreateIfNotExistsAsync();
+                await this.scrumUpdateTable.CreateIfNotExistsAsync();
             }
             catch (Exception ex)
             {

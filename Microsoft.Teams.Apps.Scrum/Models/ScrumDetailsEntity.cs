@@ -4,11 +4,19 @@
 
 namespace Microsoft.Teams.Apps.Scrum.Models
 {
+    using System;
+    using Microsoft.WindowsAzure.Storage.Table;
+
     /// <summary>
     /// Holds Scrum details.
     /// </summary>
-    public class ScrumDetails
+    public class ScrumDetailsEntity : TableEntity
     {
+        public string ThreadConversationId { get; set; }
+
+        public string UniqueRowKey { get; set; }
+
+        public string Name { get; set; }
         /// <summary>
         /// Gets or sets yesterday.
         /// </summary>
@@ -28,5 +36,11 @@ namespace Microsoft.Teams.Apps.Scrum.Models
         /// Gets or sets members Id in group.
         /// </summary>
         public string MembersActivityIdMap { get; set; }
+
+        /// <summary>
+        /// date of update time
+        /// </summary>
+        public new DateTimeOffset UpdateTime { get; set; }
+        
     }
 }

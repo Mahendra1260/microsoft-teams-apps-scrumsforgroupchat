@@ -6,7 +6,10 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
+    using System.IO;
     using System.Linq;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
@@ -19,6 +22,7 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
     using Microsoft.Rest;
     using Microsoft.Teams.Apps.Scrum.Cards;
     using Microsoft.Teams.Apps.Scrum.Common;
+    using Microsoft.Teams.Apps.Scrum.Common.storage;
     using Microsoft.Teams.Apps.Scrum.Models;
     using Microsoft.Teams.Apps.Scrum.Properties;
     using Newtonsoft.Json;
@@ -39,6 +43,7 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
         private readonly IConfiguration configuration;
         private readonly IScrumProvider scrumProvider;
         private readonly TelemetryClient telemetryClient;
+        private readonly IReportProvider reportProvider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ScrumBot"/> class.
@@ -47,12 +52,13 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
         /// <param name="configuration">Configuration.</param>
         /// <param name="scrumProvider">scrumProvider.</param>
         /// <param name="telemetryClient">Telemetry.</param>
-        public ScrumBot(IConfiguration configuration, IScrumProvider scrumProvider, TelemetryClient telemetryClient)
+        public ScrumBot(IConfiguration configuration, IScrumProvider scrumProvider, TelemetryClient telemetryClient, IReportProvider reportProvider)
         {
             this.scrumProvider = scrumProvider;
             this.telemetryClient = telemetryClient;
             this.configuration = configuration;
             this.expectedTenantId = configuration["TenantId"];
+            this.reportProvider = reportProvider;
         }
 
         /// <inheritdoc/>
@@ -96,7 +102,57 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
             }
         }
 
-        /// <inheritdoc/>
+        private async Task HandleReportGeneration(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken) {
+            string conversationId = turnContext.Activity.Conversation.Id;
+            var activityFetch = (Activity)turnContext.Activity;
+            if (activityFetch.Value == null)
+            {
+                throw new ArgumentException("activity's value should not be null");
+            }
+
+            var startDate = JObject.Parse(activityFetch.Value.ToString())["start_date"].ToString();
+            var endDate = JObject.Parse(activityFetch.Value.ToString())["end_date"].ToString();
+            var startDateTime = new DateTimeOffset(DateTime.ParseExact(
+                startDate,
+                "yyyy-MM-dd",
+                CultureInfo.InvariantCulture));
+            var endDateTime = new DateTimeOffset(DateTime.ParseExact(
+                endDate,
+                "yyyy-MM-dd",
+                CultureInfo.InvariantCulture));
+            endDateTime.AddDays(1);
+            Directory.GetCurrentDirectory();
+            List<ScrumDetailsEntity> entities = await this.scrumProvider.GetOrderedScrumUpdatesAsync(conversationId, startDateTime, endDateTime);
+            //var reportFile = await this.GetCSVReportFileFromEntities(entities);
+            /*var reply = MessageFactory.Text("This is an inline attachment.");
+            var attachment = await GetInlineAttachment(entities);
+            reply.Attachments = new List<Attachment>() { attachment };
+            this.telemetryClient.TrackTrace($"scrum {conversationId} requesting report by {turnContext.Activity.From.Id} , for date {startDate}");
+            */
+            var signedReportUri = await this.reportProvider.SaveReportAndGetUri(entities, conversationId, startDateTime, endDateTime);
+            await turnContext.SendActivityAsync(signedReportUri, cancellationToken: cancellationToken);
+        }
+
+        private static async Task<Attachment> GetInlineAttachment(List<ScrumDetailsEntity> entities)
+        {
+            var csv = new StringBuilder();
+            csv.AppendLine("Date,Name,Yesterday,Today,Blockers");
+            foreach (ScrumDetailsEntity entity in entities)
+            {
+                csv.AppendLine(entity.Timestamp.ToString() + "," + entity.Name + "," +
+                    entity.Yesterday + "," + entity.Today + "," + entity.Blockers);
+            }
+            var imagePath = Path.Combine(Environment.CurrentDirectory, @"Resources", "architecture-resize.png");
+            var imageData = Convert.ToBase64String(File.ReadAllBytes(imagePath));
+
+            return new Attachment
+            {
+                Name = @"Resources\architecture-resize.png",
+                ContentType = "text/csv",
+                ContentUrl = $"data:text/csv;base64,{csv}",
+            };
+        }
+        
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
             try
@@ -111,9 +167,20 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
                     if (turnContext.Activity.Type.Equals(ActivityTypes.Message))
                     {
                         turnContext.Activity.RemoveRecipientMention();
+                        if (turnContext.Activity.Text == null) {
+                            await this.HandleReportGeneration(turnContext, cancellationToken);
+                            return;
+                        }
 
                         switch (turnContext.Activity.Text.Trim().ToLower())
                         {
+                            case Constants.Report:
+                                this.telemetryClient.TrackTrace($"scrum {conversationId} requesting report by {turnContext.Activity.From.Id}");
+                                var reportActivity = MessageFactory.Attachment(ScrumCards.ScrumReportCard());
+                                reportActivity.Conversation = turnContext.Activity.Conversation;
+                                reportActivity.Text = "get report";
+                                await turnContext.SendActivityAsync(reportActivity, cancellationToken);
+                                break;
                             case Constants.Start:
                                 this.telemetryClient.TrackTrace($"scrum {conversationId} started by {turnContext.Activity.From.Id}");
 
@@ -229,7 +296,7 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
                     throw new ArgumentException("activity's value should not be null");
                 }
 
-                ScrumDetails scrumMemberDetails = JsonConvert.DeserializeObject<ScrumDetails>(JObject.Parse(activityFetch.Value.ToString())["data"].ToString());
+                ScrumDetailsEntity scrumMemberDetails = JsonConvert.DeserializeObject<ScrumDetailsEntity>(JObject.Parse(activityFetch.Value.ToString())["data"].ToString());
                 string membersId = scrumMemberDetails.MembersActivityIdMap;
                 string activityIdval = this.GetActivityIdToMatch(membersId, turnContext.Activity.From.Id);
 
@@ -292,7 +359,11 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
                     throw new ArgumentException("activity's value should not be null");
                 }
 
-                ScrumDetails scrumDetails = JsonConvert.DeserializeObject<ScrumDetails>(JObject.Parse(activity.Value.ToString())["data"].ToString());
+                ScrumDetailsEntity scrumDetails = JsonConvert.DeserializeObject<ScrumDetailsEntity>(JObject.Parse(activity.Value.ToString())["data"].ToString());
+                scrumDetails.Name = turnContext.Activity.From.Name;
+                scrumDetails.UpdateTime = new DateTimeOffset(DateTime.UtcNow);
+                scrumDetails.ThreadConversationId = turnContext.Activity.Conversation.Id;
+                scrumDetails.UniqueRowKey = Guid.NewGuid().ToString();
                 if (string.IsNullOrEmpty(scrumDetails.Yesterday) || string.IsNullOrEmpty(scrumDetails.Today))
                 {
                     return this.GetScrumValidation(scrumDetails, turnContext, cancellationToken);
@@ -307,6 +378,13 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
                     return default;
                 }
 
+                var savedData = await this.scrumProvider.SaveOrUpdateScrumUpdatesAsync(scrumDetails);
+
+                if (!savedData)
+                {
+                    await turnContext.SendActivityAsync(Resources.ErrorMessage);
+                    return null;
+                }
                 activity.Id = activityId;
                 activity.Conversation = turnContext.Activity.Conversation;
 
@@ -510,7 +588,7 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
         /// <param name="turnContext">Turn context.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>TaskModuleResponse.</returns>
-        private TaskModuleResponse GetScrumValidation(ScrumDetails scrum, ITurnContext<IInvokeActivity> turnContext, CancellationToken cancellationToken)
+        private TaskModuleResponse GetScrumValidation(ScrumDetailsEntity scrum, ITurnContext<IInvokeActivity> turnContext, CancellationToken cancellationToken)
         {
             return new TaskModuleResponse
             {

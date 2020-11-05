@@ -4,6 +4,8 @@
 
 namespace Microsoft.Teams.Apps.Scrum.Common
 {
+    using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using Microsoft.Teams.Apps.Scrum.Models;
 
@@ -25,5 +27,12 @@ namespace Microsoft.Teams.Apps.Scrum.Common
         /// <param name="conversationId">scrum id received from bot based on which appropriate row data will be fetched.</param>
         /// <returns><see cref="Task"/> Already saved entity detail.</returns>
         Task<ScrumEntity> GetScrumAsync(string conversationId);
+
+        Task<bool> SaveOrUpdateScrumUpdatesAsync(ScrumDetailsEntity scrumUpdate);
+
+        Task<Dictionary<string, List<ScrumDetailsEntity>>> GetScrumUpdatesAsync(string conversationId, DateTimeOffset startTime, DateTimeOffset endTime);
+
+        Task<List<ScrumDetailsEntity>> GetOrderedScrumUpdatesAsync(string conversationId, DateTimeOffset startTime, DateTimeOffset endTime);
+
     }
 }

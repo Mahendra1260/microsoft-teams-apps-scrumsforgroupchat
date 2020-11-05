@@ -16,6 +16,86 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
     /// </summary>
     public class ScrumCards
     {
+        [Obsolete]
+        public static Attachment ScrumReportCard()
+        {
+            AdaptiveCard card = new AdaptiveCard("1.0")
+            {
+                Body = new List<AdaptiveElement>
+                {
+                    new AdaptiveColumnSet
+                    {
+                        Columns = new List<AdaptiveColumn>
+                        {
+                            new AdaptiveColumn
+                            {
+                                Width = AdaptiveColumnWidth.Auto,
+                                Items = new List<AdaptiveElement>
+                                {
+                                    new AdaptiveTextBlock
+                                    {
+                                        Size = AdaptiveTextSize.Medium,
+                                        Wrap = true,
+                                        Text = "Start Date",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    new AdaptiveDateInput
+                    {
+                            Id = "start_date",
+                            Placeholder = "Enter Start Date",
+                    },
+                    new AdaptiveColumnSet
+                    {
+                        Columns = new List<AdaptiveColumn>
+                        {
+                            new AdaptiveColumn
+                            {
+                                Width = AdaptiveColumnWidth.Auto,
+                                Items = new List<AdaptiveElement>
+                                {
+                                    new AdaptiveTextBlock
+                                    {
+                                        Size = AdaptiveTextSize.Medium,
+                                        Wrap = true,
+                                        Text = "End Date",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    new AdaptiveDateInput
+                    {
+                            Id = "end_date",
+                            Placeholder = "Enter End Date",
+                    },
+                },
+            };
+
+            card.Actions.Add(
+                new AdaptiveSubmitAction()
+                {
+                    Title = Resources.SubmitTitle,
+                    Data = new AdaptiveSubmitActionData
+                    {
+                        MsTeams = new CardAction
+                        {
+                            Type = "task/submit",
+                            Text = Constants.GetReport,
+                        },
+                    },
+                });
+            card.Title = "Report";
+            var adaptiveCardAttachment = new Attachment()
+            {
+                ContentType = AdaptiveCard.ContentType,
+                Content = card,
+            };
+            return adaptiveCardAttachment;
+        }
+
         /// <summary>
         /// Scrum card rendered on task module.
         /// </summary>
@@ -155,7 +235,7 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
         /// <param name="scrumDetails">scrum details.</param>
         /// <param name="appBaseUrl">app base url.</param>
         /// <returns>card.</returns>
-        public static Attachment GetUpdateCard(string name, ScrumDetails scrumDetails, string appBaseUrl)
+        public static Attachment GetUpdateCard(string name, ScrumDetailsEntity scrumDetails, string appBaseUrl)
         {
             Uri blockerImgUrl = new Uri(appBaseUrl + "/content/blocked.png");
             string updatedTimeStamp = DateTime.UtcNow.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'");
@@ -274,7 +354,7 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
         /// </summary>
         /// <param name="scrumDetails">ScrumDetails object.</param>
         /// <returns>return carad.</returns>
-        public static Attachment ValidationCard(ScrumDetails scrumDetails)
+        public static Attachment ValidationCard(ScrumDetailsEntity scrumDetails)
         {
             string yesterdayValidationText = string.IsNullOrEmpty(scrumDetails.Yesterday) ? Resources.YesterdayValidationText : string.Empty;
             string todayValidationText = string.IsNullOrEmpty(scrumDetails.Today) ? Resources.TodayValidationText : string.Empty;
