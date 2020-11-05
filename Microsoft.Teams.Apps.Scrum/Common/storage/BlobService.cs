@@ -20,8 +20,7 @@ namespace Microsoft.Teams.Apps.Scrum.storage
         private TelemetryClient telemetryClient;
         private BlobContainerClient reportContainerClient;
         private static readonly string reportContainerName = "reports";
-
-        // https://27xnwgjign2tq.blob.core.windows.net/test?sv=2019-12-12&st=2020-11-04T13%3A41%3A24Z&se=2020-11-04T14%3A41%3A24Z&sr=b&sp=r&sig=61ZOV6TVjDlfPfA9X6AcNvpgAFkvnraZNPEzu0DZv2s%3D&comp=list&restype=container
+        
 
         public BlobService(string connectionString)
         {
@@ -34,7 +33,7 @@ namespace Microsoft.Teams.Apps.Scrum.storage
             {
                 BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
                 this.reportContainerClient = blobServiceClient.GetBlobContainerClient(reportContainerName);
-                await this.reportContainerClient.CreateIfNotExistsAsync();                
+                await this.reportContainerClient.CreateIfNotExistsAsync();
             }
             catch (Exception ex)
             {

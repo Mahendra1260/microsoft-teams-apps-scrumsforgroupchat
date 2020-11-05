@@ -7,6 +7,7 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
     using System;
     using System.Collections.Generic;
     using AdaptiveCards;
+    using Microsoft.Bot.Builder;
     using Microsoft.Bot.Schema;
     using Microsoft.Teams.Apps.Scrum.Models;
     using Microsoft.Teams.Apps.Scrum.Properties;
@@ -17,10 +18,11 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
     public class ScrumCards
     {
         [Obsolete]
-        public static Attachment ScrumReportCard()
+        public static Attachment ScrumReportCard(ITurnContext turnContext)
         {
             AdaptiveCard card = new AdaptiveCard("1.0")
             {
+                Title = "Report Requested By " + turnContext.Activity.From.Name,
                 Body = new List<AdaptiveElement>
                 {
                     new AdaptiveColumnSet
@@ -73,7 +75,22 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
                     },
                 },
             };
-
+            /* 
+             card.Actions.Add(
+            new AdaptiveSubmitAction
+            {
+                Title = Resources.CompleteScrumTitle,
+                Data = new AdaptiveSubmitActionData
+                {
+                    MsTeams = new CardAction
+                    {
+                        Type = ActionTypes.MessageBack,
+                        Text = Resources.CompleteScrumText,
+                        Value = membersId,
+                    },
+                },
+            });
+             */
             card.Actions.Add(
                 new AdaptiveSubmitAction()
                 {
@@ -82,7 +99,7 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
                     {
                         MsTeams = new CardAction
                         {
-                            Type = "task/submit",
+                            Type = ActionTypes.MessageBack,
                             Text = Constants.GetReport,
                         },
                     },
