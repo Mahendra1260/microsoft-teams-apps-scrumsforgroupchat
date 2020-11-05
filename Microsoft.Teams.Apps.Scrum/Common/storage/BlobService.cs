@@ -15,7 +15,7 @@ namespace Microsoft.Teams.Apps.Scrum.storage
 {
     public class BlobService : IReportProvider
     {
-        private static string StorageKey = "LuD6BVuaclPdj63ZSa1TGetZ83fdO+BkA8fPNO4CIqswFb25xyVx7kDH/ViG8GZNf8UxW4u6ilulxVY5Aet5CA==";
+        private static string StorageKey = "YFcSuytGFVkQeR9MqQodZrZk0U0JntTK6SPlX0qCaCdMYIo25kL25xLsbwphwQPK60Red5Ky+SzyHJFl2TZC8A==";
         private readonly Lazy<Task> initializeTask;
         private TelemetryClient telemetryClient;
         private BlobContainerClient reportContainerClient;
@@ -61,7 +61,7 @@ namespace Microsoft.Teams.Apps.Scrum.storage
                 var blobName = string.Format("{0}/{1}report.csv", conversationId, uuid);
                 await File.WriteAllTextAsync(tmpPath, csv.ToString());
                 var blobClient = this.reportContainerClient.GetBlobClient(blobName);
-                using FileStream uploadFileStream = File.OpenRead(tmpPath);
+                FileStream uploadFileStream = File.OpenRead(tmpPath);
                 await blobClient.UploadAsync(uploadFileStream, true);
                 uploadFileStream.Close();
                 blobUri = this.GetBlobSasUri(this.reportContainerClient, blobName, null);
@@ -76,7 +76,7 @@ namespace Microsoft.Teams.Apps.Scrum.storage
 
         private string GetBlobSasUri(BlobContainerClient container, string blobName, string storedPolicyName = null)
         {
-            StorageSharedKeyCredential key = new StorageSharedKeyCredential("27xnwgjign2tq", StorageKey);
+            StorageSharedKeyCredential key = new StorageSharedKeyCredential("pglb3kyqys7lu", StorageKey);
             // Create a SAS token that's valid for one hour.
             BlobSasBuilder sasBuilder = new BlobSasBuilder()
             {

@@ -162,7 +162,7 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
                 var conversationType = turnContext.Activity.Conversation.ConversationType;
                 string conversationId = turnContext.Activity.Conversation.Id;
 
-                if (string.Compare(conversationType, "team", StringComparison.OrdinalIgnoreCase) == 0)
+                if (string.Compare(conversationType, "channel", StringComparison.OrdinalIgnoreCase) == 0)
                 {
                     if (turnContext.Activity.Type.Equals(ActivityTypes.Message))
                     {
