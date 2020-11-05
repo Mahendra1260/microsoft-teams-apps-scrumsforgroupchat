@@ -80,7 +80,7 @@ namespace Microsoft.Teams.Apps.Scrum.storage
             // Create a SAS token that's valid for one hour.
             BlobSasBuilder sasBuilder = new BlobSasBuilder()
             {
-                BlobContainerName = "test",
+                BlobContainerName = reportContainerName,
                 BlobName = blobName,
                 Resource = "b",
             };

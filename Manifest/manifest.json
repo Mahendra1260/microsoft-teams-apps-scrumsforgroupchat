@@ -5,10 +5,10 @@
   "id": "7966210f-b423-4f11-b0aa-fd9af2357fc0",
   "packageName": "com.microsoft.scrumstatus",
   "developer": {
-    "name": "<<company name>>",
-    "websiteUrl": "<<websiteUrl>>",
-    "privacyUrl": "<<privacyUrl>>",
-    "termsOfUseUrl": "<<termsOfUseUrl>>"
+    "name": "Microsoft",
+    "websiteUrl": "https://github.com/OfficeDev/microsoft-teams-apps-scrumsforgroupchat",
+    "privacyUrl": "https://github.com/OfficeDev/microsoft-teams-apps-scrumsforgroupchat",
+    "termsOfUseUrl": "https://github.com/OfficeDev/microsoft-teams-apps-scrumsforgroupchat"
   },
   "icons": {
     "color": "color.png",
@@ -24,7 +24,7 @@
   "accentColor": "#FFCCD8",
   "bots": [
     {
-      "botId": "<<botId>>",
+      "botId": "f2c82938-ae84-414e-b88b-b82ac09d0ec4",
       "scopes": [
         "groupchat"
       ],
@@ -41,7 +41,12 @@
             {
               "title": "End scrum",
               "description": "Stop the current scrum"
+            },
+			{
+              "title": "Report",
+              "description": "Generate scrum updates report for specified time range"
             }
+			
           ]
         }
       ],
@@ -54,6 +59,6 @@
     "messageTeamMembers"
   ],
   "validDomains": [
-    "<<valid domains>>"
+    "FHL2020-ScrumChat.azurewebsites.net"
   ]
 }

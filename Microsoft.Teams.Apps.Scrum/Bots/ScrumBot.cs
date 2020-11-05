@@ -152,12 +152,7 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
                 ContentUrl = $"data:text/csv;base64,{csv}",
             };
         }
-
-        /* private async Task<File> GetCSVReportFileFromEntities(List<ScrumDetailsEntity> entities)
-         {
-             return null;
-         }
-        */
+        
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
             try
@@ -178,7 +173,7 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
                         }
 
                         switch (turnContext.Activity.Text.Trim().ToLower())
-                        {                                
+                        {
                             case Constants.Report:
                                 this.telemetryClient.TrackTrace($"scrum {conversationId} requesting report by {turnContext.Activity.From.Id}");
                                 var reportActivity = MessageFactory.Attachment(ScrumCards.ScrumReportCard());
