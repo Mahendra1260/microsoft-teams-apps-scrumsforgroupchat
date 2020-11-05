@@ -20,7 +20,6 @@ namespace Microsoft.Teams.Apps.Scrum.storage
         private TelemetryClient telemetryClient;
         private BlobContainerClient reportContainerClient;
         private static readonly string reportContainerName = "reports";
-        
 
         public BlobService(string connectionString)
         {
@@ -54,7 +53,7 @@ namespace Microsoft.Teams.Apps.Scrum.storage
                 csv.AppendLine("Date,Name,Yesterday,Today,Blockers");
                 foreach (ScrumDetailsEntity entity in scrumUpdates)
                 {
-                    csv.AppendLine(entity.Timestamp.ToString() + "," + entity.Name + "," +
+                    csv.AppendLine(entity.Timestamp.Date.ToString("d") + "," + entity.Name + "," +
                         entity.Yesterday + "," + entity.Today + "," + entity.Blockers);
                 }
                 var blobName = string.Format("{0}/{1}report.csv", conversationId, uuid);

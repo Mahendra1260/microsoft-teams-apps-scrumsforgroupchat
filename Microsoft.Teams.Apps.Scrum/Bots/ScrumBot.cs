@@ -137,7 +137,9 @@ namespace Microsoft.Teams.Apps.Scrum.Bots
                 return;
             }
             var signedReportUri = await this.reportProvider.SaveReportAndGetUri(entities, conversationId, startDateTime, endDateTime);
-            await turnContext.SendActivityAsync(signedReportUri, cancellationToken: cancellationToken);
+            var reportActivity = MessageFactory.Attachment(ScrumCards.GetReportLinkCard(turnContext, startDateTime, endDateTime, signedReportUri));
+            reportActivity.Conversation = turnContext.Activity.Conversation;
+            await turnContext.SendActivityAsync(reportActivity, cancellationToken: cancellationToken);
         }
 
         private static async Task<Attachment> GetInlineAttachment(List<ScrumDetailsEntity> entities)
