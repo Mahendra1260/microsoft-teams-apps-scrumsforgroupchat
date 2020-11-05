@@ -162,7 +162,7 @@
     <comment>Text on show on trail card</comment>
   </data>
   <data name="ScrumCompleteText" xml:space="preserve">
-    <value>Nice Work! This scrum is complete.</value>
+    <value>Thank you! This scrum is complete.</value>
     <comment>Text to show when scrum is complete.</comment>
   </data>
   <data name="ScrumHelpMessage" xml:space="preserve">

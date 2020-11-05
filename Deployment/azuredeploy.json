@@ -5,20 +5,23 @@
     "baseResourceName": {
       "type": "string",
       "minLength": 1,
+	  "defaultValue": "FHL-ScrumsForGroupChat",
       "metadata": {
         "description": "The base name to use for the resources that will be provisioned."
       }
     },
-    "botClientId": {
+       "botClientId": {
       "type": "string",
       "minLength": 36,
       "maxLength": 36,
+	  "defaultValue": "7d1f8c43-475a-4503-9da3-e54b6f5f50d3",
       "metadata": {
         "description": "The client ID of the bot Azure AD app, e.g., 123e4567-e89b-12d3-a456-426655440000."
       }
     },
     "botClientSecret": {
       "type": "securestring",
+	  "defaultValue": "3r.a56TQX.4GV_8HgZ9mLR75hFFYTcjM_8",
       "minLength": 1,
       "metadata": {
         "description": "The client secret of the bot Azure AD app."
@@ -27,7 +30,7 @@
     "appDisplayName": {
       "type": "string",
       "minLength": 1,
-      "defaultValue": "Scrum Status",
+      "defaultValue": "Scrum Bot",
       "metadata": {
         "description": "App display name."
       }
@@ -42,11 +45,11 @@
     },
     "tenantId": {
       "type": "string",
-      "defaultValue": "[subscription().tenantId]",
+      "defaultValue": "72f988bf-86f1-41af-91ab-2d7cd011db47",
       "minLength": 1,
       "maxLength": 36,
       "metadata": {
-        "description": "The ID of the tenant to which the app will be deployed."
+        "description": "The ID of the tenant to which the app will be deployed...."
       }
     },
     "appIconUrl": {
@@ -88,12 +91,12 @@
         "description": "Location for all resources."
       }
     },
-    "gitRepoUrl": {
+     "gitRepoUrl": {
       "type": "string",
       "metadata": {
         "description": "The URL to the GitHub repository to deploy."
       },
-      "defaultValue": "https://github.com/OfficeDev/microsoft-teams-app-scrumstatus.git"
+      "defaultValue": "https://github.com/Mahendra1260/microsoft-teams-apps-scrumsforgroupchat.git"
     },
     "gitBranch": {
       "type": "string",
