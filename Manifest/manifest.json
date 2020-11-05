@@ -18,21 +18,21 @@
     "short": "Scrum Bot"
   },
   "description": {
-    "short": "Scrum Status Bot helps you get status updates from your team in group chat.",
-    "full": "Scrum Status Bot is a simple scrum assistant that will enable users to run asynchronous standup meetings and provide and easy way for the users to share their daily updates."
+    "short": "Scrum Bot helps you get status updates from your team in group chat.",
+    "full": "Scrum Bot is a simple scrum assistant that will enable users to run asynchronous standup meetings and provide and easy way for the users to share their daily updates."
   },
   "accentColor": "#FFCCD8",
   "bots": [
     {
-      "botId": "f2c82938-ae84-414e-b88b-b82ac09d0ec4",
+      "botId": "7d1f8c43-475a-4503-9da3-e54b6f5f50d3",
       "scopes": [
-		"team",
+    		"team",
         "groupchat"				
       ],
       "commandLists": [
         {
           "scopes": [
-			"team",
+      			"team",
             "groupchat"		
           ],
           "commands": [
@@ -61,6 +61,6 @@
     "messageTeamMembers"
   ],
   "validDomains": [
-    "FHL2020-ScrumChat.azurewebsites.net"
+    "FHL-ScrumsForGroupChat.azurewebsites.net"
   ]
 }
