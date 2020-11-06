@@ -17,7 +17,7 @@ namespace Microsoft.Teams.Apps.Scrum
         /// <summary>
         /// text that triggers report action.
         /// </summary>
-        public const string Report = "report";
+        public const string Report = "generate report";
 
         /// <summary>
         /// text that triggers report action.

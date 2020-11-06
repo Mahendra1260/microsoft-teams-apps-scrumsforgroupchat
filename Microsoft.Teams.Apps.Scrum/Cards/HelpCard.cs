@@ -68,6 +68,19 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
                             MsTeams = new CardAction
                             {
                               Type = ActionTypes.MessageBack,
+                              DisplayText = "Generate report",
+                              Text = Constants.Report,
+                            },
+                        },
+                    },
+                    new AdaptiveSubmitAction
+                    {
+                        Title = Resources.TakeATourButtonText,
+                        Data = new AdaptiveSubmitActionData
+                        {
+                            MsTeams = new CardAction
+                            {
+                              Type = ActionTypes.MessageBack,
                               DisplayText = Resources.TakeATourButtonText,
                               Text = Constants.TakeATour,
                             },
