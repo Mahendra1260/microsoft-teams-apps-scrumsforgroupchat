@@ -82,12 +82,17 @@ namespace Microsoft.Teams.Apps.AskHR.Common.Providers
         {
             try
             {
+                await this.EnsureInitializedAsync();
+                var partitionKeyFilter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, UpdatesPartitionKey);
+                var conversationFilter = TableQuery.GenerateFilterCondition("ThreadConversationId", QueryComparisons.Equal, conversationId);
+                var gtTimeFilter = TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.GreaterThanOrEqual, startTime);
+                var ltTimeFilter = TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.LessThanOrEqual, endTime);
+                string finalFilter = TableQuery.CombineFilters(
+                    TableQuery.CombineFilters(partitionKeyFilter, TableOperators.And, conversationFilter),
+                    TableOperators.And,
+                    TableQuery.CombineFilters(gtTimeFilter, TableOperators.And, ltTimeFilter));
                 TableQuery<ScrumDetailsEntity> scrumDetailsQuery = new TableQuery<ScrumDetailsEntity>()
-                     .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, UpdatesPartitionKey))
-                     .Where(TableQuery.GenerateFilterCondition("ThreadConversationId", QueryComparisons.Equal, conversationId))
-                     .Where(TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.GreaterThanOrEqual, startTime))
-                     .Where(TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.LessThanOrEqual, endTime))
-                     ;
+                     .Where(finalFilter);
                 TableContinuationToken token = null;
                 List<ScrumDetailsEntity> entities = new List<ScrumDetailsEntity>();
                 do

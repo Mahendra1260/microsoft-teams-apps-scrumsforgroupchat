@@ -5,10 +5,10 @@
   "id": "7966210f-b423-4f11-b0aa-fd9af2357fc0",
   "packageName": "com.microsoft.scrumstatus",
   "developer": {
-    "name": "FHL2020Team",
-    "websiteUrl": "https://www.microsoft.com",
-    "privacyUrl": "https://www.teams.com/privacy",
-    "termsOfUseUrl": "https://www.teams.com/termsofuser"
+    "name": "Microsoft_scrum",
+    "websiteUrl": "https://github.com/OfficeDev/microsoft-teams-apps-scrumsforgroupchat",
+    "privacyUrl": "https://github.com/OfficeDev/microsoft-teams-apps-scrumsforgroupchat",
+    "termsOfUseUrl": "https://github.com/OfficeDev/microsoft-teams-apps-scrumsforgroupchat"
   },
   "icons": {
     "color": "color.png",
@@ -26,12 +26,14 @@
     {
       "botId": "7d1f8c43-475a-4503-9da3-e54b6f5f50d3",
       "scopes": [
-        "team"
+    		"team",
+        "groupchat"				
       ],
       "commandLists": [
         {
           "scopes": [
-            "team"
+      			"team",
+            "groupchat"		
           ],
           "commands": [
             {
