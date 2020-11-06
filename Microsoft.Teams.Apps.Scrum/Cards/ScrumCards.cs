@@ -100,7 +100,7 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
                                     {
                                         Size = AdaptiveTextSize.Medium,
                                         Wrap = true,
-                                        Text = "Please provide the date range to generate the repor",
+                                        Text = "Please provide the date range to generate the report",
                                     },
                                 },
                             },
@@ -166,7 +166,6 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
                         {
                             Type = ActionTypes.MessageBack,
                             Text = Constants.GetReport,
-                            DisplayText = "Submit",
                         },
                     },
                 });

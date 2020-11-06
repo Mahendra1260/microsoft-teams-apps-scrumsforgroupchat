@@ -62,7 +62,7 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
                     },
                     new AdaptiveSubmitAction
                     {
-                        Title = Resources.TakeATourButtonText,
+                        Title = "Generate report",
                         Data = new AdaptiveSubmitActionData
                         {
                             MsTeams = new CardAction
