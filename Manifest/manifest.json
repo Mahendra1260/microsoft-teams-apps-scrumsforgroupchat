@@ -45,7 +45,7 @@
               "description": "Stop the current scrum"
             },
 			{
-              "title": "Report",
+              "title": "Generate report",
               "description": "Generate scrum updates report for specified time range"
             }
 			

@@ -46,7 +46,6 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
                     {
                         Columns = new List<AdaptiveColumn>
                         {
-
                             new AdaptiveColumn
                             {
                                 Width = AdaptiveColumnWidth.Auto,
@@ -56,7 +55,7 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
                                     {
                                         Size = AdaptiveTextSize.Medium,
                                         Wrap = true,
-                                        Text = "Scrum Updates Report : " + startDate.Date.ToString("d") + " - " + endDate.Date.ToString("d"),
+                                        Text = "Scrum Updates Report : " + startDate.Date.ToString("d") + " - " + endDate.AddDays(-1).Date.ToString("d"),
                                     },
                                 },
                             },
@@ -84,12 +83,29 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
         [Obsolete]
         public static Attachment ScrumReportCard(ITurnContext turnContext)
         {
-            
             AdaptiveCard card = new AdaptiveCard("1.0")
             {
-                Title = "Report Requested By " + turnContext.Activity.From.Name,
                 Body = new List<AdaptiveElement>
                 {
+                    new AdaptiveColumnSet
+                    {
+                        Columns = new List<AdaptiveColumn>
+                        {
+                            new AdaptiveColumn
+                            {
+                                Width = AdaptiveColumnWidth.Auto,
+                                Items = new List<AdaptiveElement>
+                                {
+                                    new AdaptiveTextBlock
+                                    {
+                                        Size = AdaptiveTextSize.Medium,
+                                        Wrap = true,
+                                        Text = "Please provide the date range to generate the report",
+                                    },
+                                },
+                            },
+                        },
+                    },
                     new AdaptiveColumnSet
                     {
                         Columns = new List<AdaptiveColumn>
@@ -140,22 +156,6 @@ namespace Microsoft.Teams.Apps.Scrum.Cards
                     },
                 },
             };
-            /* 
-             card.Actions.Add(
-            new AdaptiveSubmitAction
-            {
-                Title = Resources.CompleteScrumTitle,
-                Data = new AdaptiveSubmitActionData
-                {
-                    MsTeams = new CardAction
-                    {
-                        Type = ActionTypes.MessageBack,
-                        Text = Resources.CompleteScrumText,
-                        Value = membersId,
-                    },
-                },
-            });
-             */
             card.Actions.Add(
                 new AdaptiveSubmitAction()
                 {
